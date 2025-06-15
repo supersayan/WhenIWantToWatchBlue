@@ -4,12 +4,12 @@ import {ref} from "vue"
 const isBlue = ref(true)
 
 async function toggleBlue() {
-  const res = await fetch("http://localhost:8081/toggle")
+  const res = await fetch("http://localhost:8080/tv/0/flip")
   updateBlue()
 }
 
 async function updateBlue() {
-  const res = await fetch("http://localhost:8081/get")
+  const res = await fetch("http://localhost:8080/tv/0")
   isBlue.value = (await res.json()).blue
 }
 </script>
