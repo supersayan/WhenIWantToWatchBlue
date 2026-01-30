@@ -22,11 +22,13 @@ func main() {
 	server := NewServer()
 	router := mux.NewRouter()
 
+	router.Use(corsMiddleware)
+
 	router.HandleFunc("/", home)
 	router.HandleFunc("/tv/{index:[0-9]+}", server.getTvHandler).Methods("GET")
 	router.HandleFunc("/tv/{index:[0-9]+}/flip", server.toggleTvHandler).Methods("POST")
 
-	log.Fatal(http.ListenAndServe(":8081", nil))
+	log.Fatal(http.ListenAndServe(":8080", router))
 }
 
 type Server struct {
@@ -99,9 +101,9 @@ func (s *Server) getTvHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if index >= len(boolArray) {
-		s.sendResponse(w, http.StatusOK, Response{
-			Success: true,
-			Data:    false,
+		s.sendResponse(w, http.StatusBadRequest, Response{
+			Success: false,
+			Error:   "Invalid index parameter",
 		})
 		return
 	}
@@ -171,9 +173,23 @@ func (s *Server) toggleTvHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 func (s *Server) sendResponse(w http.ResponseWriter, statusCode int, response Response) {
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.WriteHeader(statusCode)
 	json.NewEncoder(w).Encode(response)
 }

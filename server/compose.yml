@@ -3,16 +3,21 @@ version: '0.1'
 
 services:
   app:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: go-backend
     ports:
       - "8080:8080"
-    depends_on:
-      - redis
     environment:
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
+      - REDIS_ADDR=redis:6379
+      - PORT=8080
+    depends_on:
+      redis:
+        condition: service_healthy
     networks:
       - app-network
+    restart: unless-stopped
 
   redis:
     image: redis:8-alpine
@@ -22,6 +27,11 @@ services:
       - redis_data:/data
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
 volumes:
   redis_data:

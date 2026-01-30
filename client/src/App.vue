@@ -1,23 +1,9 @@
 <script setup lang="ts">
-import {ref} from "vue"
-
-const isBlue = ref(true)
-
-async function toggleBlue() {
-  const res = await fetch("http://localhost:8080/tv/0/flip")
-  updateBlue()
-}
-
-async function updateBlue() {
-  const res = await fetch("http://localhost:8080/tv/0")
-  isBlue.value = (await res.json()).blue
-}
+import { RouterView } from 'vue-router'
 </script>
 
 <template>
-  <div class="page" :class="{ blue: isBlue }" @click="toggleBlue">
-
-  </div>
+  <RouterView />
 </template>
 
 <style scoped>

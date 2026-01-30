@@ -10,7 +10,7 @@ RUN go mod download
 COPY . .
 
 # Build the application
-RUN CGO_ENABLED=0 GOOS=linux go build -o main .
+RUN CGO_ENABLED=0 GOOS=linux go build -o main.go .
 
 # Final stage
 FROM alpine:latest
@@ -21,4 +21,4 @@ RUN apk --no-cache add ca-certificates
 EXPOSE 8080
 
 # Run the binary
-CMD ["./main"]
+CMD ["go", "run", "main.go"]
