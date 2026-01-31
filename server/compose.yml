@@ -1,6 +1,4 @@
 # docker-compose.yml
-version: '0.1'
-
 services:
   app:
     build:

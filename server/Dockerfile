@@ -1,24 +1,15 @@
-# Dockerfile
-FROM golang:1.23.1-alpine AS builder
+FROM golang:1.23
 
 WORKDIR /
 
-COPY go.mod go.sum ./
+COPY go.mod ./
+COPY go.sum ./
 RUN go mod download
 
-# Copy source code
-COPY . .
+COPY . ./
 
-# Build the application
-RUN CGO_ENABLED=0 GOOS=linux go build -o main.go .
+RUN go build -o /main
 
-# Final stage
-FROM alpine:latest
-
-RUN apk --no-cache add ca-certificates
-
-# Expose port
 EXPOSE 8080
 
-# Run the binary
-CMD ["go", "run", "main.go"]
+CMD [ "/main" ]
