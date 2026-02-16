@@ -7,6 +7,7 @@ import (
 	"html"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 
@@ -27,6 +28,7 @@ func main() {
 	router.HandleFunc("/", home)
 	router.HandleFunc("/tv/{index:[0-9]+}", server.getTvHandler).Methods("GET")
 	router.HandleFunc("/tv/{index:[0-9]+}/flip", server.toggleTvHandler).Methods("POST")
+	router.HandleFunc("/tv/all", server.getAllTvHandler).Methods("GET")
 
 	log.Fatal(http.ListenAndServe(":8080", router))
 }
@@ -45,8 +47,13 @@ type Response struct {
 const REDIS_KEY = ""
 
 func NewServer() *Server {
+	addr := os.Getenv("REDIS_ADDR")
+	if addr == "" {
+		addr = "redis:6379"
+	}
+
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     "redis:6379",
+		Addr:     addr,
 		Password: "",
 		DB:       0,
 	})
@@ -170,6 +177,28 @@ func (s *Server) toggleTvHandler(w http.ResponseWriter, r *http.Request) {
 	s.sendResponse(w, http.StatusOK, Response{
 		Success: true,
 		Data:    boolArray[index],
+	})
+}
+
+func (s *Server) getAllTvHandler(w http.ResponseWriter, r *http.Request) {
+	arrayStr, err := s.redis.Get(s.ctx, REDIS_KEY).Result()
+	if err == redis.Nil {
+		s.sendResponse(w, http.StatusOK, Response{
+			Success: true,
+			Data:    "",
+		})
+		return
+	} else if err != nil {
+		s.sendResponse(w, http.StatusInternalServerError, Response{
+			Success: false,
+			Error:   "Failed to retrieve data",
+		})
+		return
+	}
+
+	s.sendResponse(w, http.StatusOK, Response{
+		Success: true,
+		Data:    arrayStr,
 	})
 }
 
